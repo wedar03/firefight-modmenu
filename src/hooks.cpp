@@ -5,12 +5,13 @@
 #include "game.h"
 #include <android/log.h>
 #include <dlfcn.h>
+#include <stdio.h>
 #include <ctype.h>
 #include <string.h>
 #include <map>
 #include <string>
 
-#include "dobby.h"
+#include "gothook.h"
 
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, "FFMOD", __VA_ARGS__)
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, "FFMOD", __VA_ARGS__)
@@ -231,6 +232,8 @@ void* hookRWFromFile(const char* file, const char* mode) {
     return sdl_RWFromMem((void*)it->second.data(), (int)it->second.size());
 }
 
+// 用 GOT hook：改 libmain.so 里该符号的 PLT/GOT 条目。
+// origin 用 dlsym 拿到的真实地址（而不是 GOT 里可能尚未解析的 PLT 桩），避免崩溃。
 template <typename T>
 bool hookSym(void* handle, const char* name, void* replace, T*& origin) {
     void* addr = dlsym(handle, name);
@@ -238,10 +241,25 @@ bool hookSym(void* handle, const char* name, void* replace, T*& origin) {
         LOGE("dlsym 失败: %s", name);
         return false;
     }
-    if (DobbyHook(addr, replace, (void**)&origin) != 0) {
-        LOGE("DobbyHook 失败: %s", name);
+    void* old = nullptr;
+    if (!got_hook("libmain.so", name, replace, &old)) {
+        LOGE("GOT hook 失败: %s", name);
         return false;
     }
+    origin = (T)addr;
+    LOGI("hook 成功: %s", name);
+    return true;
+}
+
+// SDL 函数：改 libmain.so 对它们的调用（GOT 在 libmain.so 里）
+template <typename T>
+bool hookSdl(const char* name, void* replace, T*& origin, T real) {
+    void* old = nullptr;
+    if (!got_hook("libmain.so", name, replace, &old)) {
+        LOGE("SDL hook 失败: %s", name);
+        return false;
+    }
+    origin = real;
     LOGI("hook 成功: %s", name);
     return true;
 }
@@ -283,25 +301,19 @@ int installHooks(void* mainHandle, void* sdlHandle) {
     sdl_RWFromMem = (FnRWFromMem)dlsym(sdlHandle, "SDL_RWFromMem");
 
     if (g_sdl.RenderPresent) {
-        if (DobbyHook((void*)g_sdl.RenderPresent, (void*)hookRenderPresent,
-                      (void**)&origPresent) == 0) {
+        if (hookSdl("SDL_RenderPresent", (void*)hookRenderPresent, origPresent, g_sdl.RenderPresent))
             ok++;
-            LOGI("hook SDL_RenderPresent ok");
-        }
     }
     if (g_sdl.WaitEvent) {
-        if (DobbyHook((void*)g_sdl.WaitEvent, (void*)hookWaitEvent, (void**)&origWaitEvent) == 0)
-            ok++;
+        if (hookSdl("SDL_WaitEvent", (void*)hookWaitEvent, origWaitEvent, g_sdl.WaitEvent)) ok++;
     }
     if (g_sdl.PollEvent) {
-        if (DobbyHook((void*)g_sdl.PollEvent, (void*)hookPollEvent, (void**)&origPollEvent) == 0)
-            ok++;
+        if (hookSdl("SDL_PollEvent", (void*)hookPollEvent, origPollEvent, g_sdl.PollEvent)) ok++;
     }
     if (sdl_RWread && sdl_RWclose && sdl_RWFromMem) {
         origRWFromFile = (FnRWFromFile)dlsym(sdlHandle, "SDL_RWFromFile");
         if (origRWFromFile) {
-            if (DobbyHook((void*)origRWFromFile, (void*)hookRWFromFile,
-                          (void**)&origRWFromFile) == 0) {
+            if (hookSdl("SDL_RWFromFile", (void*)hookRWFromFile, origRWFromFile, origRWFromFile)) {
                 ok++;
                 LOGI("hook SDL_RWFromFile ok");
             }

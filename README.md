@@ -13,7 +13,7 @@
 原本：Java loadLibrary("SDL2") → 真·libSDL2.so → libmain.so
 改后：Java loadLibrary("SDL2") → 我们的壳 libSDL2.so
                                      ├─ dlopen(libSDL2_real.so, RTLD_GLOBAL)
-                                     └─ 等 libmain.so 就绪 → Dobby hook 五个点：
+                                     └─ 等 libmain.so 就绪 → GOT/PLT hook 五个点：
                                           ├─ SDL_RenderPresent → 每帧画菜单（游戏的字体渲染中文）
                                           ├─ SDL_WaitEvent / PollEvent → 截触摸
                                           ├─ Game::isArmourPenetratedByShot → 无敌 / 必穿（即时）

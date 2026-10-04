@@ -1,6 +1,7 @@
 #include "text.h"
 #include <android/log.h>
 #include <dlfcn.h>
+#include <stdio.h>
 #include <map>
 #include <string>
 #include <vector>

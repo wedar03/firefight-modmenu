@@ -11,13 +11,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Checkout Dobby
-        uses: actions/checkout@v4
-        with:
-          repository: jmpews/Dobby
-          ref: master
-          path: third_party/Dobby
-
       - name: Setup Android NDK
         uses: nttld/setup-ndk@v1
         id: setup-ndk
