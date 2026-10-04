@@ -246,7 +246,10 @@ bool hookSym(void* handle, const char* name, void* replace, T*& origin) {
         LOGE("GOT hook 失败: %s", name);
         return false;
     }
-    origin = reinterpret_cast<T>(static_cast<uintptr_t>(reinterpret_cast<uintptr_t>(addr)));
+    // void* -> 函数指针：NDK 下 reinterpret_cast / 整数中转都不允许，只能 memcpy
+    T fp = nullptr;
+    memcpy(&fp, &addr, sizeof(addr));
+    origin = fp;
     LOGI("hook 成功: %s", name);
     return true;
 }
