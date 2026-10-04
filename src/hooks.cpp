@@ -235,7 +235,7 @@ void* hookRWFromFile(const char* file, const char* mode) {
 // 用 GOT hook：改 libmain.so 里该符号的 PLT/GOT 条目。
 // origin 用 dlsym 拿到的真实地址（而不是 GOT 里可能尚未解析的 PLT 桩），避免崩溃。
 template <typename T>
-bool hookSym(void* handle, const char* name, void* replace, T*& origin) {
+bool hookSym(void* handle, const char* name, void* replace, T& origin) {
     void* addr = dlsym(handle, name);
     if (!addr) {
         LOGE("dlsym 失败: %s", name);
@@ -247,6 +247,7 @@ bool hookSym(void* handle, const char* name, void* replace, T*& origin) {
         return false;
     }
     // void* -> 函数指针：NDK 下 reinterpret_cast / 整数中转都不允许，只能 memcpy
+    // 注意形参是 T&（不是 T*&），否则 T 会被推导成函数类型而非函数指针类型
     T fp = nullptr;
     memcpy(&fp, &addr, sizeof(addr));
     origin = fp;
