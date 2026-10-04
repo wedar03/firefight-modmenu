@@ -246,7 +246,7 @@ bool hookSym(void* handle, const char* name, void* replace, T*& origin) {
         LOGE("GOT hook 失败: %s", name);
         return false;
     }
-    origin = reinterpret_cast<T>(addr);
+    origin = reinterpret_cast<T>(static_cast<uintptr_t>(reinterpret_cast<uintptr_t>(addr)));
     LOGI("hook 成功: %s", name);
     return true;
 }
@@ -283,21 +283,21 @@ int ffGetFrameNumber() {
 int installHooks(void* mainHandle, void* sdlHandle) {
     int ok = 0;
 
-    g_sdl.RenderPresent = reinterpret_cast<FnRenderPresent>(dlsym(sdlHandle, "SDL_RenderPresent"));
-    g_sdl.WaitEvent = reinterpret_cast<FnWaitEvent>(dlsym(sdlHandle, "SDL_WaitEvent"));
-    g_sdl.PollEvent = reinterpret_cast<FnPollEvent>(dlsym(sdlHandle, "SDL_PollEvent"));
+    g_sdl.RenderPresent = reinterpret_cast<FnRenderPresent>(reinterpret_cast<uintptr_t>(dlsym(sdlHandle, "SDL_RenderPresent")));
+    g_sdl.WaitEvent = reinterpret_cast<FnWaitEvent>(reinterpret_cast<uintptr_t>(dlsym(sdlHandle, "SDL_WaitEvent")));
+    g_sdl.PollEvent = reinterpret_cast<FnPollEvent>(reinterpret_cast<uintptr_t>(dlsym(sdlHandle, "SDL_PollEvent")));
     g_sdl.GetRendererOutputSize =
-        reinterpret_cast<FnGetRendererOutputSize>(dlsym(sdlHandle, "SDL_GetRendererOutputSize"));
-    g_sdl.SetRenderDrawColor = reinterpret_cast<FnSetRenderDrawColor>(dlsym(sdlHandle, "SDL_SetRenderDrawColor"));
-    g_sdl.RenderFillRect = reinterpret_cast<FnRenderFillRect>(dlsym(sdlHandle, "SDL_RenderFillRect"));
-    g_sdl.RenderDrawRect = reinterpret_cast<FnRenderDrawRect>(dlsym(sdlHandle, "SDL_RenderDrawRect"));
-    g_sdl.GetTicks = reinterpret_cast<FnGetTicks>(dlsym(sdlHandle, "SDL_GetTicks"));
+        reinterpret_cast<FnGetRendererOutputSize>(reinterpret_cast<uintptr_t>(dlsym(sdlHandle, "SDL_GetRendererOutputSize")));
+    g_sdl.SetRenderDrawColor = reinterpret_cast<FnSetRenderDrawColor>(reinterpret_cast<uintptr_t>(dlsym(sdlHandle, "SDL_SetRenderDrawColor")));
+    g_sdl.RenderFillRect = reinterpret_cast<FnRenderFillRect>(reinterpret_cast<uintptr_t>(dlsym(sdlHandle, "SDL_RenderFillRect")));
+    g_sdl.RenderDrawRect = reinterpret_cast<FnRenderDrawRect>(reinterpret_cast<uintptr_t>(dlsym(sdlHandle, "SDL_RenderDrawRect")));
+    g_sdl.GetTicks = reinterpret_cast<FnGetTicks>(reinterpret_cast<uintptr_t>(dlsym(sdlHandle, "SDL_GetTicks")));
 
-    sdl_RWsize = reinterpret_cast<FnRWsize>(dlsym(sdlHandle, "SDL_RWsize"));
-    sdl_RWseek = reinterpret_cast<FnRWseek>(dlsym(sdlHandle, "SDL_RWseek"));
-    sdl_RWread = reinterpret_cast<FnRWread>(dlsym(sdlHandle, "SDL_RWread"));
-    sdl_RWclose = reinterpret_cast<FnRWclose>(dlsym(sdlHandle, "SDL_RWclose"));
-    sdl_RWFromMem = reinterpret_cast<FnRWFromMem>(dlsym(sdlHandle, "SDL_RWFromMem"));
+    sdl_RWsize = reinterpret_cast<FnRWsize>(reinterpret_cast<uintptr_t>(dlsym(sdlHandle, "SDL_RWsize")));
+    sdl_RWseek = reinterpret_cast<FnRWseek>(reinterpret_cast<uintptr_t>(dlsym(sdlHandle, "SDL_RWseek")));
+    sdl_RWread = reinterpret_cast<FnRWread>(reinterpret_cast<uintptr_t>(dlsym(sdlHandle, "SDL_RWread")));
+    sdl_RWclose = reinterpret_cast<FnRWclose>(reinterpret_cast<uintptr_t>(dlsym(sdlHandle, "SDL_RWclose")));
+    sdl_RWFromMem = reinterpret_cast<FnRWFromMem>(reinterpret_cast<uintptr_t>(dlsym(sdlHandle, "SDL_RWFromMem")));
 
     if (g_sdl.RenderPresent) {
         if (hookSdl("SDL_RenderPresent", (void*)hookRenderPresent, (void**)&origPresent,
@@ -315,7 +315,7 @@ int installHooks(void* mainHandle, void* sdlHandle) {
             ok++;
     }
     if (sdl_RWread && sdl_RWclose && sdl_RWFromMem) {
-        origRWFromFile = reinterpret_cast<FnRWFromFile>(dlsym(sdlHandle, "SDL_RWFromFile"));
+        origRWFromFile = reinterpret_cast<FnRWFromFile>(reinterpret_cast<uintptr_t>(dlsym(sdlHandle, "SDL_RWFromFile")));
         if (origRWFromFile) {
             if (hookSdl("SDL_RWFromFile", (void*)hookRWFromFile, (void**)&origRWFromFile,
                         reinterpret_cast<void*>(origRWFromFile)))
@@ -326,12 +326,12 @@ int installHooks(void* mainHandle, void* sdlHandle) {
     if (!mainHandle) {
         LOGE("libmain.so 句柄为空，游戏侧 hook 跳过");
     } else {
-        fnShotSide = reinterpret_cast<sym::FnGetU8>(dlsym(mainHandle, sym::kShotGetShooterSide));
-        fnSidePlayingAs = reinterpret_cast<sym::FnGetU8>(dlsym(mainHandle, sym::kGetSidePlayingAs));
-        fnSelectedSide = reinterpret_cast<sym::FnGetU8>(dlsym(mainHandle, sym::kGetSelectedSide));
-        fnSquadSide = reinterpret_cast<sym::FnGetU8>(dlsym(mainHandle, sym::kSquadGetSide));
-        fnNumPieces = reinterpret_cast<sym::FnGetInt>(dlsym(mainHandle, sym::kGetNumberPieces));
-        fnFrameNumber = reinterpret_cast<sym::FnGetInt>(dlsym(mainHandle, sym::kGetFrameNumber));
+        fnShotSide = reinterpret_cast<sym::FnGetU8>(reinterpret_cast<uintptr_t>(dlsym(mainHandle, sym::kShotGetShooterSide)));
+        fnSidePlayingAs = reinterpret_cast<sym::FnGetU8>(reinterpret_cast<uintptr_t>(dlsym(mainHandle, sym::kGetSidePlayingAs)));
+        fnSelectedSide = reinterpret_cast<sym::FnGetU8>(reinterpret_cast<uintptr_t>(dlsym(mainHandle, sym::kGetSelectedSide)));
+        fnSquadSide = reinterpret_cast<sym::FnGetU8>(reinterpret_cast<uintptr_t>(dlsym(mainHandle, sym::kSquadGetSide)));
+        fnNumPieces = reinterpret_cast<sym::FnGetInt>(reinterpret_cast<uintptr_t>(dlsym(mainHandle, sym::kGetNumberPieces)));
+        fnFrameNumber = reinterpret_cast<sym::FnGetInt>(reinterpret_cast<uintptr_t>(dlsym(mainHandle, sym::kGetFrameNumber)));
 
         if (hookSym(mainHandle, sym::kIsArmourPenetrated, (void*)hookIsArmourPenetrated, origPen))
             ok++;

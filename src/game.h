@@ -104,6 +104,21 @@ struct SDLRect {
     int x, y, w, h;
 };
 
+// ---- 从 libSDL2_real.so dlsym 得到的 SDL 函数表 ----
+struct SDLApi {
+    FnRenderPresent RenderPresent = nullptr;
+    FnWaitEvent WaitEvent = nullptr;
+    FnPollEvent PollEvent = nullptr;
+    FnGetRendererOutputSize GetRendererOutputSize = nullptr;
+    FnSetRenderDrawColor SetRenderDrawColor = nullptr;
+    FnRenderFillRect RenderFillRect = nullptr;
+    FnRenderDrawRect RenderDrawRect = nullptr;
+    FnGetTicks GetTicks = nullptr;
+};
+
+// 定义在 ui.cpp，hooks.cpp 负责填充
+extern SDLApi g_sdl;
+
 // SDL_TouchFingerEvent 布局（SDL2 2.x）
 struct SDLFingerEvent {
     unsigned int type;
