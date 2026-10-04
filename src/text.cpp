@@ -87,23 +87,23 @@ std::string makeKey(const char* text, int pt, unsigned rgba) {
 bool textInit(void* sdlHandle, void* ttfHandle, FnRWFromFile rwFromFile) {
     if (!sdlHandle || !ttfHandle || !rwFromFile) return false;
 
-    t.TTF_Init = (FnTTFInit)dlsym(ttfHandle, "TTF_Init");
-    t.TTF_OpenFontRW = (FnTTFOpenFontRW)dlsym(ttfHandle, "TTF_OpenFontRW");
-    t.TTF_RenderUTF8_Blended = (FnTTFRenderUTF8Blended)dlsym(ttfHandle, "TTF_RenderUTF8_Blended");
+    t.TTF_Init = reinterpret_cast<FnTTFInit>(dlsym(ttfHandle, "TTF_Init"));
+    t.TTF_OpenFontRW = reinterpret_cast<FnTTFOpenFontRW>(dlsym(ttfHandle, "TTF_OpenFontRW"));
+    t.TTF_RenderUTF8_Blended = reinterpret_cast<FnTTFRenderUTF8Blended>(dlsym(ttfHandle, "TTF_RenderUTF8_Blended"));
     t.SDL_CreateTextureFromSurface =
-        (FnCreateTextureFromSurface)dlsym(sdlHandle, "SDL_CreateTextureFromSurface");
-    t.SDL_DestroyTexture = (FnDestroyTexture)dlsym(sdlHandle, "SDL_DestroyTexture");
-    t.SDL_FreeSurface = (FnFreeSurface)dlsym(sdlHandle, "SDL_FreeSurface");
-    t.SDL_QueryTexture = (FnQueryTexture)dlsym(sdlHandle, "SDL_QueryTexture");
-    t.SDL_RenderCopy = (FnRenderCopy)dlsym(sdlHandle, "SDL_RenderCopy");
+        reinterpret_cast<FnCreateTextureFromSurface>(dlsym(sdlHandle, "SDL_CreateTextureFromSurface"));
+    t.SDL_DestroyTexture = reinterpret_cast<FnDestroyTexture>(dlsym(sdlHandle, "SDL_DestroyTexture"));
+    t.SDL_FreeSurface = reinterpret_cast<FnFreeSurface>(dlsym(sdlHandle, "SDL_FreeSurface"));
+    t.SDL_QueryTexture = reinterpret_cast<FnQueryTexture>(dlsym(sdlHandle, "SDL_QueryTexture"));
+    t.SDL_RenderCopy = reinterpret_cast<FnRenderCopy>(dlsym(sdlHandle, "SDL_RenderCopy"));
     t.SDL_SetTextureBlendMode =
-        (FnSetTextureBlendMode)dlsym(sdlHandle, "SDL_SetTextureBlendMode");
-    t.SDL_RWFromMem = (FnRWFromMem)dlsym(sdlHandle, "SDL_RWFromMem");
-    t.SDL_RWsize = (FnRWsize)dlsym(sdlHandle, "SDL_RWsize");
-    t.SDL_RWseek = (FnRWseek)dlsym(sdlHandle, "SDL_RWseek");
-    t.SDL_RWread = (FnRWread)dlsym(sdlHandle, "SDL_RWread");
-    t.SDL_RWclose = (FnRWclose)dlsym(sdlHandle, "SDL_RWclose");
-    t.SDL_GetTicks = (FnGetTicks)dlsym(sdlHandle, "SDL_GetTicks");
+        reinterpret_cast<FnSetTextureBlendMode>(dlsym(sdlHandle, "SDL_SetTextureBlendMode"));
+    t.SDL_RWFromMem = reinterpret_cast<FnRWFromMem>(dlsym(sdlHandle, "SDL_RWFromMem"));
+    t.SDL_RWsize = reinterpret_cast<FnRWsize>(dlsym(sdlHandle, "SDL_RWsize"));
+    t.SDL_RWseek = reinterpret_cast<FnRWseek>(dlsym(sdlHandle, "SDL_RWseek"));
+    t.SDL_RWread = reinterpret_cast<FnRWread>(dlsym(sdlHandle, "SDL_RWread"));
+    t.SDL_RWclose = reinterpret_cast<FnRWclose>(dlsym(sdlHandle, "SDL_RWclose"));
+    t.SDL_GetTicks = reinterpret_cast<FnGetTicks>(dlsym(sdlHandle, "SDL_GetTicks"));
 
     if (!t.TTF_OpenFontRW || !t.TTF_RenderUTF8_Blended || !t.SDL_CreateTextureFromSurface ||
         !t.SDL_RenderCopy) {

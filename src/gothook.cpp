@@ -2,6 +2,7 @@
 
 #include <android/log.h>
 #include <elf.h>
+#include <stdint.h>
 #include <link.h>
 #include <string.h>
 #include <sys/mman.h>

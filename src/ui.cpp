@@ -4,6 +4,9 @@
 #include <math.h>
 #include <stdio.h>
 
+// 全局 SDL 函数表（hooks.cpp 里 dlsym 填好，绘制时读）
+SDLApi g_sdl;
+
 namespace {
 
 // ---- 颜色（ABGR 打包顺序见 textDraw 的 rgba 参数：0xRRGGBBAA）----
